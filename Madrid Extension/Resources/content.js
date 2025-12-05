@@ -1,7 +1,8 @@
-browser.runtime.sendMessage({ greeting: "hello" }).then((response) => {
-    console.log("Received response: ", response);
-});
+// ========================================
+// AUTO ARCHIVE TABS - Content Script
+// ========================================
 
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("Received request: ", request);
-});
+// This extension primarily uses background script
+// Content script is minimal and can be used for future enhancements
+
+console.log('🌟 Auto Archive Tabs - Content script loaded');

@@ -1,11 +1,335 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=340, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auto Archive Tabs</title>
     <link rel="stylesheet" href="popup.css">
-    <script type="module" src="popup.js"></script>
 </head>
 <body>
-    <strong>Hello World!</strong>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <svg class="logo" id="logo-rickroll" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8v13H3V8"/>
+                    <path d="M1 3h22v5H1z"/>
+                    <path d="M10 12v4"/>
+                    <path d="M14 12v4"/>
+                </svg>
+                <h1 data-i18n="appName">Auto Archive</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon-header btn-donate" id="donate-btn" title="Donate">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
+                <button class="btn-icon-header" id="help-btn" data-i18n-title="showGuide">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </button>
+                <div class="stats-badge">
+                    <span id="tab-count">0</span> <span data-i18n="tabs">tabs</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="archive">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8v13H3V8"/>
+                    <path d="M1 3h22v5H1z"/>
+                </svg>
+                <span data-i18n="tabArchive">Archive</span>
+            </button>
+            <button class="tab-btn" data-tab="settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <span data-i18n="tabSettings">Settings</span>
+            </button>
+            <button class="tab-btn" data-tab="protected">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span data-i18n="tabProtected">Protected</span>
+            </button>
+        </nav>
+
+        <!-- Archive Tab -->
+        <section id="archive-tab" class="tab-content active">
+            <div class="archive-header">
+                <span class="archive-count"><span id="archive-count">0</span> <span data-i18n="archived">archived</span></span>
+                <button id="clear-archive-btn" class="btn-clear hidden" data-i18n-title="clearAll">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    <span data-i18n="clear">Clear</span>
+                </button>
+            </div>
+            <div id="archive-list" class="archive-list">
+                <div class="empty-state">
+                    <svg class="empty-icon-svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 8v13H3V8"/>
+                        <path d="M1 3h22v5H1z"/>
+                        <line x1="10" y1="12" x2="14" y2="12"/>
+                    </svg>
+                    <p data-i18n="noArchivedTabs">No archived tabs yet</p>
+                    <small data-i18n="inactiveTabsAppear">Inactive tabs will appear here</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Tab -->
+        <section id="settings-tab" class="tab-content">
+            <!-- Scope & Sync Settings -->
+            <div class="settings-group scope-section">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <span data-i18n="settingsScope">Settings scope</span>
+                </label>
+                <div class="scope-buttons" id="scope-buttons">
+                    <button type="button" class="scope-btn active" data-scope="global">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        <span data-i18n="scopeGlobal">Global</span>
+                    </button>
+                    <button type="button" class="scope-btn" data-scope="perTabGroup" id="scope-tab-group-btn">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"/>
+                            <rect x="14" y="3" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                        <span data-i18n="scopePerTabGroup">Tab Groups</span>
+                    </button>
+                    <button type="button" class="scope-btn" data-scope="perWindow">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <path d="M8 21h8"/>
+                            <path d="M12 17v4"/>
+                        </svg>
+                        <span data-i18n="scopePerWindow">Window</span>
+                    </button>
+                </div>
+                <p class="setting-hint" id="scope-hint" data-i18n="scopeGlobalHint">Same settings for all windows</p>
+            </div>
+
+            <!-- Tab Group Selector (only visible when scope is perTabGroup) -->
+            <div class="settings-group tab-group-selector-group hidden" id="tab-group-selector-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span data-i18n="selectTabGroup">Configure tab group</span>
+                </label>
+                <select id="tab-group-select" class="full-width">
+                    <!-- Tab groups will be populated here -->
+                </select>
+            </div>
+
+            <!-- Tab Groups Unavailable Message -->
+            <div class="settings-group tab-groups-unavailable hidden" id="tab-groups-unavailable">
+                <div class="unavailable-message">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span data-i18n="tabGroupsUnavailable">Tab Groups require Safari 17+</span>
+                </div>
+            </div>
+
+            <!-- Window Selector (only visible when scope is perWindow) -->
+            <div class="settings-group window-selector-group hidden" id="window-selector-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                    </svg>
+                    <span data-i18n="selectWindow">Configure window</span>
+                </label>
+                <select id="window-select" class="full-width">
+                    <!-- Windows will be populated here -->
+                </select>
+            </div>
+
+            <!-- Sync Toggle -->
+            <div class="settings-group sync-toggle-group">
+                <label class="toggle-row">
+                    <div class="toggle-info">
+                        <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c-1.66 0-3-4.03-3-9s1.34-9 3-9m0 18c1.66 0 3-4.03 3-9s-1.34-9-3-9"/>
+                        </svg>
+                        <span data-i18n="syncSettings">Sync across devices</span>
+                    </div>
+                    <button type="button" class="toggle-switch" id="sync-toggle" aria-checked="true">
+                        <span class="toggle-thumb"></span>
+                    </button>
+                </label>
+                <p class="setting-hint" data-i18n="syncHint">Sync settings between your Macs via iCloud</p>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span data-i18n="archiveAfterInactive">Archive after inactive for</span>
+                </label>
+                <div class="time-picker">
+                    <input type="number" id="archive-threshold" min="1" max="9999" value="24" class="time-input">
+                    <div class="time-units">
+                        <button type="button" class="unit-btn" data-unit="seconds" data-target="archive-threshold-unit" data-i18n="unitSec">sec</button>
+                        <button type="button" class="unit-btn" data-unit="minutes" data-target="archive-threshold-unit" data-i18n="unitMin">min</button>
+                        <button type="button" class="unit-btn active" data-unit="hours" data-target="archive-threshold-unit" data-i18n="unitHour">hr</button>
+                        <button type="button" class="unit-btn" data-unit="days" data-target="archive-threshold-unit" data-i18n="unitDay">day</button>
+                    </div>
+                    <input type="hidden" id="archive-threshold-unit" value="hours">
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    <span data-i18n="deleteFromArchive">Delete from archive after</span>
+                </label>
+                <div class="time-picker">
+                    <input type="number" id="archive-expiration" min="1" max="9999" value="24" class="time-input">
+                    <div class="time-units">
+                        <button type="button" class="unit-btn" data-unit="seconds" data-target="archive-expiration-unit" data-i18n="unitSec">sec</button>
+                        <button type="button" class="unit-btn" data-unit="minutes" data-target="archive-expiration-unit" data-i18n="unitMin">min</button>
+                        <button type="button" class="unit-btn active" data-unit="hours" data-target="archive-expiration-unit" data-i18n="unitHour">hr</button>
+                        <button type="button" class="unit-btn" data-unit="days" data-target="archive-expiration-unit" data-i18n="unitDay">day</button>
+                    </div>
+                    <input type="hidden" id="archive-expiration-unit" value="hours">
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    <span data-i18n="minTabsForArchiving">Minimum tabs to start archiving</span>
+                </label>
+                <div class="setting-input">
+                    <input type="number" id="min-tabs" min="2" max="50" value="11">
+                    <span class="input-suffix" data-i18n="tabs">tabs</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                    <span data-i18n="maxTabsPerWindow">Max tabs per window</span>
+                </label>
+                <div class="setting-input">
+                    <input type="number" id="max-tabs" min="5" max="100" value="20">
+                    <span class="input-suffix" data-i18n="tabs">tabs</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18"/>
+                        <path d="M8 6h10v10"/>
+                    </svg>
+                    <span data-i18n="whenMaxReached">When max tabs reached</span>
+                </label>
+                <div class="setting-input">
+                    <select id="max-tabs-action" class="full-width">
+                        <option value="archiveOldest" data-i18n="archiveOldestOption">Archive oldest inactive tab</option>
+                        <option value="closeNew" data-i18n="closeNewOption">Close the new tab</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Site-specific tab limits -->
+            <div class="settings-group site-limits-section">
+                <label class="setting-label">
+                    <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M2 12h20"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <span data-i18n="siteLimits">Per-site tab limits</span>
+                </label>
+                <p class="setting-description" data-i18n="siteLimitsInfo">Limit the number of tabs for specific websites.</p>
+                
+                <div class="add-site-limit">
+                    <input type="text" id="new-site-domain" data-i18n-placeholder="siteDomainPlaceholder" placeholder="e.g. youtube.com">
+                    <input type="number" id="new-site-max" min="1" max="50" value="3" class="site-max-input">
+                    <button id="add-site-limit-btn" class="btn btn-small">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="site-limits-list" class="site-limits-list">
+                    <!-- Site limits will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Protected Tab -->
+        <section id="protected-tab" class="tab-content">
+            <div class="protected-header">
+                <p class="protected-info" data-i18n="protectedInfo">Sites matching these patterns will never be archived.</p>
+            </div>
+            
+            <div class="add-pattern">
+                <input type="text" id="new-pattern" data-i18n-placeholder="patternPlaceholder" placeholder="e.g. *://github.com/*">
+                <button id="add-pattern-btn" class="btn btn-small">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span data-i18n="add">Add</span>
+                </button>
+            </div>
+
+            <div id="patterns-list" class="patterns-list">
+                <div class="empty-state small">
+                    <svg class="empty-icon-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <p data-i18n="noProtectedSites">No protected sites</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

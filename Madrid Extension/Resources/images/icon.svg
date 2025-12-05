@@ -1,0 +1,64 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Main gradient -->
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E94560"/>
+      <stop offset="100%" stop-color="#FF6B6B"/>
+    </linearGradient>
+    
+    <!-- Shadow gradient -->
+    <linearGradient id="shadowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C73E54"/>
+      <stop offset="100%" stop-color="#A33347"/>
+    </linearGradient>
+    
+    <!-- Highlight gradient -->
+    <linearGradient id="highlightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF8A8A"/>
+      <stop offset="100%" stop-color="#E94560"/>
+    </linearGradient>
+    
+    <!-- Drop shadow filter -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#mainGradient)" filter="url(#dropShadow)"/>
+  
+  <!-- Archive box - main body -->
+  <rect x="120" y="200" width="272" height="180" rx="20" fill="white" fill-opacity="0.95"/>
+  
+  <!-- Archive box - lid -->
+  <path d="M100 180 L120 200 L392 200 L412 180 L412 150 C412 138.954 403.046 130 392 130 L120 130 C108.954 130 100 138.954 100 150 L100 180Z" fill="white" fill-opacity="0.95"/>
+  
+  <!-- Lid line/separation -->
+  <line x1="120" y1="200" x2="392" y2="200" stroke="#E94560" stroke-width="3" stroke-opacity="0.3"/>
+  
+  <!-- Archive slot/opening -->
+  <rect x="200" y="155" width="112" height="20" rx="10" fill="#E94560" fill-opacity="0.2"/>
+  
+  <!-- Tab being archived - animated look -->
+  <g transform="translate(256, 280)">
+    <!-- Tab shape -->
+    <rect x="-70" y="-40" width="140" height="80" rx="12" fill="url(#mainGradient)"/>
+    
+    <!-- Tab favicon placeholder -->
+    <circle cx="-35" cy="0" r="16" fill="white" fill-opacity="0.3"/>
+    
+    <!-- Tab title lines -->
+    <rect x="-10" y="-8" width="60" height="8" rx="4" fill="white" fill-opacity="0.5"/>
+    <rect x="-10" y="8" width="40" height="6" rx="3" fill="white" fill-opacity="0.3"/>
+  </g>
+  
+  <!-- Down arrow indicating archiving -->
+  <path d="M256 340 L280 360 L268 360 L268 390 L244 390 L244 360 L232 360 Z" fill="#E94560" fill-opacity="0.6"/>
+  
+  <!-- Decorative elements - small dots -->
+  <circle cx="150" cy="320" r="8" fill="#E94560" fill-opacity="0.15"/>
+  <circle cx="362" cy="320" r="8" fill="#E94560" fill-opacity="0.15"/>
+  <circle cx="150" cy="360" r="6" fill="#E94560" fill-opacity="0.1"/>
+  <circle cx="362" cy="360" r="6" fill="#E94560" fill-opacity="0.1"/>
+</svg>
+

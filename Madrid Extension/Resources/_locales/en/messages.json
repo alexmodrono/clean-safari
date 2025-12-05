@@ -1,10 +1,10 @@
 {
     "extension_name": {
-        "message": "Madrid Extension",
+        "message": "Auto Archive Tabs",
         "description": "The display name for the extension."
     },
     "extension_description": {
-        "message": "This is Madrid Extension. You should tell us what your extension does here.",
+        "message": "Automatically archives inactive tabs to keep your browser clean and organized.",
         "description": "Description of what the extension does."
     }
 }

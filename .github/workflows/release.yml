@@ -1,0 +1,146 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    name: Build and Create Release
+    runs-on: macos-14
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Update version in project
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Update Info.plist version if needed
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "Madrid/Info.plist" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "Madrid/Info.plist" 2>/dev/null || true
+
+      - name: Build app
+        run: |
+          xcodebuild -project Madrid.xcodeproj \
+            -scheme Madrid \
+            -configuration Release \
+            -archivePath build/AutoArchive.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export app
+        run: |
+          mkdir -p build/Export
+          
+          # Copy app from archive
+          cp -R "build/AutoArchive.xcarchive/Products/Applications/"*.app "build/Export/" || true
+          
+          # Find the app
+          APP_PATH=$(find build/Export -name "*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find "build/AutoArchive.xcarchive/Products/Applications" -name "*.app" -type d | head -1)
+            cp -R "$APP_PATH" "build/Export/"
+          fi
+
+      - name: Create DMG
+        id: dmg
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DMG_NAME="AutoArchive-${VERSION}.dmg"
+          
+          mkdir -p build/dmg
+          cp -R build/Export/*.app build/dmg/
+          ln -s /Applications build/dmg/Applications
+          
+          hdiutil create -volname "Auto Archive" \
+            -srcfolder build/dmg \
+            -ov -format UDZO \
+            "build/$DMG_NAME"
+          
+          CHECKSUM=$(shasum -a 256 "build/$DMG_NAME" | awk '{print $1}')
+          
+          echo "dmg_path=build/$DMG_NAME" >> $GITHUB_OUTPUT
+          echo "dmg_name=$DMG_NAME" >> $GITHUB_OUTPUT
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cat << 'EOF' > release_notes.md
+          ## Auto Archive v${{ steps.version.outputs.version }}
+          
+          ### 📥 Installation
+          
+          1. Download `${{ steps.dmg.outputs.dmg_name }}`
+          2. Open the DMG and drag **Auto Archive** to Applications
+          3. Open the app and click "Enable in Safari"
+          4. In Safari Settings → Extensions, enable **Auto Archive**
+          
+          ### ✨ Features
+          
+          - Automatic tab archiving based on inactivity
+          - Configurable time thresholds (seconds to days)
+          - Protected sites that never get archived
+          - Per-Tab Group settings (Safari 17+)
+          - Cross-device settings sync via iCloud
+          - Smart tab limits per window
+          
+          ### 🔐 Checksum
+          
+          ```
+          SHA256: ${{ steps.dmg.outputs.checksum }}
+          ```
+          
+          ### ⚠️ Note
+          
+          This app is not notarized. On first launch, you may need to:
+          1. Right-click the app → Open
+          2. Or go to System Settings → Privacy & Security → Open Anyway
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Auto Archive v${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.dmg.outputs.dmg_path }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.version.outputs.version) || github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoArchive-${{ steps.version.outputs.version }}
+          path: ${{ steps.dmg.outputs.dmg_path }}
+
